@@ -1,23 +1,46 @@
-import express from 'express';
+import express from "express";
 import {
-  addEmployee,
-  editEmployee,
-  deleteEmployee,
-  getAllEmployees,
-  loginEmployee,
+  registerEmployee,
+  authEmployee,
+  getEmployees,
   getEmployeeById,
-  searchEmployees // Added search route
-} from '../controller/employee.controller.js';
+  updateEmployee,
+  deleteEmployee,
+  searchEmployees,
+  getEmployeesByBranch,
+  updateEmployeeRole,
+  getEmployeeProfile,
+  updateEmployeeProfile
+} from "../controller/employee.controller.js";
+import { protect, admin, manager, employee, sameBranchOrAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Define routes
-router.post('/add', addEmployee);
-router.put('/edit/:id', editEmployee);
-router.delete('/delete/:id', deleteEmployee);
-router.get('/all', getAllEmployees); // Optional: Get all employees
-router.post('/login', loginEmployee);
-router.get('/employee/:id', getEmployeeById);
-router.get('/search', searchEmployees); // Search employees route
+// Public routes
+router.post("/login", authEmployee);
+
+// Admin-only routes
+router.post("/register", registerEmployee);
+router.delete("/:id", protect, admin, deleteEmployee);
+
+// Manager+ routes
+router.get("/branch/:branchId", protect, manager, getEmployeesByBranch);
+router.put("/:id/role", protect, manager, updateEmployeeRole);
+
+// Employee+ routes (all authenticated employees)
+router.get("/profile", protect, employee, getEmployeeProfile);
+router.put("/profile", protect, employee, updateEmployeeProfile);
+
+// Protected routes with different access levels
+router.route("/")
+  .get(protect, manager, getEmployees)
+  .post(protect, admin, registerEmployee);
+
+router.route("/search")
+  .get(protect, manager, searchEmployees);
+
+router.route("/:id")
+  .get(protect, employee, getEmployeeById)
+  .put(protect, employee, updateEmployee);  // Employees can update their own profile
 
 export default router;

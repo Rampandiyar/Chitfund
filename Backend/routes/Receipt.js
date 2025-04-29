@@ -1,18 +1,24 @@
 import express from "express";
-import { addReciept, getReciepts, editReciept, deleteReciept } from "../controller/reciept.controller.js";
+import {
+  createReceipt,
+  getReceipts,
+  getReceiptById,
+  updateReceipt,
+  cancelReceipt,
+  getReceiptStats
+} from "../controller/receipt.controller.js";
+import { protect, manager } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Add a reciept
-router.post("/add", addReciept);
+// Manager+ routes
+router.post("/", protect, manager, createReceipt);
+router.patch("/:id/cancel", protect, manager, cancelReceipt);
 
-// Get all reciepts
-router.get("/", getReciepts);
-
-// Edit a reciept
-router.put("/edit/:id", editReciept);
-
-// Delete a reciept
-router.delete("/delete/:id", deleteReciept);
+// Protected routes
+router.get("/", protect, getReceipts);
+router.get("/stats", protect, getReceiptStats);
+router.get("/:id", protect, getReceiptById);
+router.put("/:id", protect, manager, updateReceipt);
 
 export default router;

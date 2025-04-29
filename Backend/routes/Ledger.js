@@ -1,18 +1,28 @@
-import express from "express";
-import { addLedger, getLedgers, editLedger, deleteLedger } from "../controller/ledger.controller.js";
+import express from 'express';
+import {
+  createLedgerEntry,
+  getLedgerEntries,
+  getLedgerEntryById,
+  getMemberLedger,
+  updateLedgerEntry,
+  getLedgerStats
+} from '../controller/ledger.controller.js';
+import { protect, manager } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Add a ledger entry
-router.post("/add", addLedger);
+// Protected routes
+router.use(protect);
 
-// Get all ledger entries
-router.get("/", getLedgers);
+// Basic employee routes
+router.get('/',protect, getLedgerEntries);
+router.post('/', createLedgerEntry);
+router.get('/:id', getLedgerEntryById);
+router.put('/:id', updateLedgerEntry);
+router.get('/members/:member_id/ledger', getMemberLedger);
 
-// Edit a ledger entry
-router.put("/edit/:id", editLedger);
-
-// Delete a ledger entry
-router.delete("/delete/:id", deleteLedger);
+// Manager/admin only routes
+router.use(manager);
+router.get('/stats', getLedgerStats);
 
 export default router;

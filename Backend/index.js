@@ -8,6 +8,12 @@ import ledgerRoutes from "./routes/Ledger.js";
 import memberRoutes from "./routes/Member.js";
 import recieptRoutes from "./routes/Receipt.js";
 import schemeRoutes from "./routes/Scheme.js";
+import transactionRoutes from "./routes/Transaction.js";
+import installmentRoutes from './routes/Installment.js';
+import notificationRoutes from './routes/Notification.js';
+import payoutRoutes from './routes/Payout.js';
+import bookingRoutes from './routes/Booking.js';
+
 import cors from 'cors';
 dotenv.config();
 
@@ -22,6 +28,11 @@ app.use('/api/ledgers', ledgerRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/reciepts', recieptRoutes);
 app.use('/api/schemes', schemeRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/installments', installmentRoutes);
+app.use('/api/notifications', notificationRoutes); 
+app.use('/api/payouts', payoutRoutes); 
+app.use('/api/bookings', bookingRoutes);
 
 app.use((err, req, res, next) => {
     const statusCode = err.status || 500;

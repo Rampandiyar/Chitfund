@@ -1,18 +1,28 @@
 import express from "express";
-import { addScheme, getSchemes, editScheme, deleteScheme } from "../controller/scheme.controller.js";
+import {
+  createScheme,
+  getSchemes,
+  getSchemeById,
+  updateScheme,
+  toggleSchemeStatus,
+  getSchemeStats,
+  deleteScheme
+} from "../controller/scheme.controller.js";
+import { protect, admin, manager } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Add a scheme
-router.post("/add", addScheme);
+// Admin-only routes
+router.post("/", protect, admin, createScheme);
+router.delete("/:id", protect, admin, deleteScheme);
 
-// Get all schemes
-router.get("/", getSchemes);
+// Manager+ routes
+router.put("/:id", protect, manager, updateScheme);
+router.patch("/:id/status", protect, manager, toggleSchemeStatus);
 
-// Edit a scheme
-router.put("/edit/:id", editScheme);
-
-// Delete a scheme
-router.delete("/delete/:id", deleteScheme);
+// Protected routes
+router.get("/", protect, getSchemes);
+router.get("/stats", protect, getSchemeStats);
+router.get("/:id", protect, getSchemeById);
 
 export default router;

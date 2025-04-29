@@ -1,14 +1,28 @@
-import express from 'express';
-import { addGroup, getGroups, editGroup, deleteGroup, getBranchIdsFromGroups, searchGroups } from '../controller/group.controller.js';
+import express from "express";
+import {
+  createGroup,
+  getGroups,
+  getGroupById,
+  updateGroup,
+  addGroupMember,
+  removeGroupMember,
+  advanceGroupMonth,
+  deleteGroup
+} from "../controller/group.controller.js";
+import { protect, manager } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Define your routes
-router.post('/add', addGroup);
-router.get('/get', getGroups);
-router.put('/edit/:id', editGroup);
-router.delete('/delete/:id', deleteGroup);
-router.get('/branchIds', getBranchIdsFromGroups);
-router.get('/search', searchGroups);
+// Manager+ routes
+router.post("/", protect, manager, createGroup);
+router.post("/:id/members", protect, manager, addGroupMember);
+router.delete("/:id/members/:memberId", protect, manager, removeGroupMember);
+router.post("/:id/advance", protect, manager, advanceGroupMonth);
+router.delete("/:id", protect, manager, deleteGroup);
+
+// Protected routes
+router.get("/", protect, getGroups);
+router.get("/:id", protect, getGroupById);
+router.put("/:id", protect, manager, updateGroup);
 
 export default router;

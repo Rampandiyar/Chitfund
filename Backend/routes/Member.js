@@ -1,18 +1,26 @@
 import express from "express";
-import { addMember, getMembers, editMember, deleteMember } from "../controller/member.controller.js";
+import {
+  registerMember,
+  getMembers,
+  getMemberById,
+  updateMember,
+  toggleMemberStatus,
+  getMemberStats,
+  deleteMember
+} from "../controller/member.controller.js";
+import { protect, manager } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Add a member
-router.post("/add", addMember);
+// Manager+ routes
+router.post("/", protect, manager, registerMember);
+router.delete("/:id", protect, manager, deleteMember);
 
-// Get all members
-router.get("/", getMembers);
-
-// Edit a member
-router.put("/edit/:id", editMember);
-
-// Delete a member
-router.delete("/delete/:id", deleteMember);
+// Protected routes
+router.get("/", protect, getMembers);
+router.get("/stats", protect, getMemberStats);
+router.get("/:id", protect, getMemberById);
+router.put("/:id", protect, manager, updateMember);
+router.patch("/:id/status", protect, manager, toggleMemberStatus);
 
 export default router;

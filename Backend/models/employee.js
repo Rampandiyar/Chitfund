@@ -1,81 +1,107 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-// Define the Employee schema
-const EmployeeSchema = new mongoose.Schema(
-  {
+const EmployeeSchema = new mongoose.Schema({
     emp_id: {
-      type: String,
-      required: true,
-      unique:true
+        type: String,
+        unique: true
     },
     emp_name: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
     gender: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
     dob: {
-      type: Date,
-      required: true,
+        type: Date,
+        required: true, 
     },
     phone: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
     email: {
-      type: String,
-      required: true,
-      unique:true
+        type: String,
+        required: true,
+        unique: true
     },
     password: {
-      type: String,
-      required: true,
-      minlength: 6, 
+        type: String,
+        required: true,
+        minlength: 6, 
     },
     status: {
-      type: String,
-      default: 'Active',
+        type: String,
+        default: 'Active',
     },
     address: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
     role: {  
-      type: String,
-      enum: ['Admin', 'Manager', 'Employee'], 
-      default: 'Employee', 
+        type: String,
+        enum: ['Admin', 'Manager', 'Employee'], 
+        default: 'Employee', 
     },
     photo: {
-      type: String, // Expect a string path or URL
-      default: '../assets/user.png', // Correctly formatted relative path
+        type: String,
+        default: '../assets/user.png',
     },
-  },
-  { timestamps: true } // Add createdAt and updatedAt fields
-);
+    branch_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Branch',
+        required: true
+    },
+    joining_date: {
+        type: Date,
+        default: Date.now
+    }
+}, { timestamps: true });
 
-// Hash password before saving the employee document
+// Pre-save hooks and methods remain the same as in your original
 EmployeeSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next(); // Only hash if password is modified or new
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+    if (!this.isNew || this.emp_id) return next();
+    try {
+        const lastEmployee = await this.constructor.findOne({}, {}, { sort: { 'emp_id': -1 } });
+        let newId = 'EMP001';
+        if (lastEmployee && lastEmployee.emp_id) {
+            const lastIdNumber = parseInt(lastEmployee.emp_id.replace('EMP', ''), 10);
+            newId = `EMP${String(lastIdNumber + 1).padStart(3, '0')}`;
+        }
+        this.emp_id = newId;
+        next();
+    } catch (error) {
+        next(error);
+    }
 });
 
-// Method to compare password for login
+EmployeeSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) return next();
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
 EmployeeSchema.methods.comparePassword = async function (enteredPassword) {
-  try {
-    return await bcrypt.compare(enteredPassword, this.password);
-  } catch (error) {
-    throw new Error('Password comparison failed');
-  }
+    try {
+        return await bcrypt.compare(enteredPassword, this.password);
+    } catch (error) {
+        throw error;
+    }
 };
 
-// Create and export the Employee model
+EmployeeSchema.statics.findByEmail = async function (email) {
+    try {
+        return await this.findOne({ email });
+    } catch (error) {
+        throw error;
+    }
+};
+
 export default mongoose.model('Employee', EmployeeSchema);

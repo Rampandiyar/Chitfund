@@ -1,24 +1,35 @@
 import express from "express";
-import { addBranch, editBranch, deleteBranch, searchBranches, getBranchById, getAllBranches } from "../controller/branch.controller.js";
+import {
+    createBranch,
+    getBranches,
+    getBranchById,
+    updateBranch,
+    deleteBranch,
+    getBranchesByStatus,
+    searchBranches  // Add this import
+} from "../controller/branch.controller.js";
 
 const router = express.Router();
 
-// Route to add a branch
-router.post('/add', addBranch);
+// Create a new branch
+router.post("/", createBranch);
 
-// Route to edit a branch
-router.put("/edit/:id", editBranch);
+// Get all branches
+router.get("/", getBranches);
 
-// Route to delete a branch
-router.delete("/delete/:id", deleteBranch);
+// Search branches
+router.get("/search", searchBranches);  // Add this route
 
-// Route to search for branches by branch ID or name
-router.get("/search", searchBranches);
+// Get branches by status
+router.get("/status/:status", getBranchesByStatus);
 
-// Route to get a branch by ID
+// Get a single branch by ID
 router.get("/:id", getBranchById);
 
-// Route to get all branches
-router.get("/", getAllBranches);
+// Update a branch
+router.put("/:id", updateBranch);
+
+// Delete a branch (soft delete)
+router.delete("/:id", deleteBranch);
 
 export default router;
