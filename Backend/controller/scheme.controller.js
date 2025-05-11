@@ -7,6 +7,19 @@ export const createScheme = async (req, res) => {
   try {
     const { created_by, ...schemeData } = req.body;
 
+    // Validate required fields
+    const requiredFields = ['scheme_name', 'chit_amount', 'duration_months', 
+                           'installment_amount', 'commission_rate', 
+                           'min_members', 'max_members'];
+    const missingFields = requiredFields.filter(field => !schemeData[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
     // Validate creator exists if provided
     if (created_by) {
       const creator = await Employee.findById(created_by);
@@ -18,14 +31,20 @@ export const createScheme = async (req, res) => {
       }
     }
 
-    // Validate installment amount calculation
-    const calculatedInstallment = schemeData.chit_amount / schemeData.duration_months;
-    if (Math.abs(calculatedInstallment - schemeData.installment_amount) > 1) {
-      return res.status(400).json({
-        success: false,
-        message: `Installment amount should be approximately ${calculatedInstallment.toFixed(2)} for this scheme`
-      });
-    }
+// Validate installment amount calculation
+const calculatedInstallment = schemeData.chit_amount / schemeData.duration_months;
+
+// Round off both to 2 decimal places
+const roundedCalculated = parseFloat(calculatedInstallment.toFixed(2));
+const roundedUserInstallment = parseFloat(schemeData.installment_amount.toFixed(2));
+
+if (Math.abs(roundedCalculated - roundedUserInstallment) > 1) {
+  return res.status(400).json({
+    success: false,
+    message: `Installment amount should be approximately ${roundedCalculated.toFixed(2)} for this scheme`
+  });
+}
+
 
     // Validate min/max members
     if (schemeData.min_members >= schemeData.max_members) {
@@ -46,6 +65,7 @@ export const createScheme = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Error creating scheme:", error);
     res.status(500).json({
       success: false,
       message: error.message

@@ -11,9 +11,9 @@ const protect = async (req, res, next) => {
       req.employee = await Employee.findById(decoded.id)
         .select("-password")
         .populate('branch_id', 'branch_id bname');
-      next();
+      return next();  // Added return here
     } catch (error) {
-      res.status(401).json({ 
+      return res.status(401).json({  // Added return here
         success: false,
         message: "Not authorized, token failed" 
       });
@@ -21,7 +21,7 @@ const protect = async (req, res, next) => {
   }
 
   if (!token) {
-    res.status(401).json({ 
+    return res.status(401).json({  // Added return here
       success: false,
       message: "Not authorized, no token" 
     });

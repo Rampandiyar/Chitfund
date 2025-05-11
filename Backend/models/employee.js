@@ -45,10 +45,11 @@ const EmployeeSchema = new mongoose.Schema({
         enum: ['Admin', 'Manager', 'Employee'], 
         default: 'Employee', 
     },
-    photo: {
-        type: String,
-        default: '../assets/user.png',
-    },
+// models/Employee.js
+photo: {
+    type: String,
+    default: ''
+  },
     branch_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch',

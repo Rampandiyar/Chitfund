@@ -57,7 +57,7 @@ const MemberSchema = new mongoose.Schema({
     },
     photo: {
         type: String,
-        default: '../assets/user.png'
+        default: ''
     },
     active: {
         type: Boolean,

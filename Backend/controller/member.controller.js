@@ -1,7 +1,113 @@
 import Member from "../models/member.js";
 import Branch from "../models/branch.js";
 import Employee from "../models/employee.js";
+import { uploadImage, getImage, deleteImage } from '../Utils/gridFS.js';
+import multer from 'multer';
 
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+}); 
+
+export const uploadMemberPhoto = [
+  upload.single('photo'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Please upload an image file"
+        });
+      }
+
+      // Find member
+      const member = await Member.findOne({
+        $or: [
+          { _id: req.params.id },
+          { member_id: req.params.id }
+        ]
+      });
+      
+      if (!member) {
+        return res.status(404).json({
+          success: false,
+          message: "Member not found"
+        });
+      }
+
+      // Delete old photo if exists
+      if (member.photo) {
+        await deleteImage(member.photo);
+      }
+
+      // Upload new photo
+      const filename = await uploadImage(req.file);
+
+      // Update member with new photo filename
+      member.photo = filename;
+      await member.save();
+
+      res.status(200).json({
+        success: true,
+        data: {
+          photo: filename
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+];
+
+// @desc    Get member photo
+// @route   GET /api/members/:id/photo
+export const getMemberPhoto = async (req, res) => {
+  try {
+    const member = await Member.findOne({
+      $or: [
+        { _id: req.params.id },
+        { member_id: req.params.id }
+      ]
+    });
+    
+    if (!member || !member.photo) {
+      return res.status(404).json({
+        success: false,
+        message: "Photo not found"
+      });
+    }
+
+    const downloadStream = await getImage(member.photo);
+    
+    if (!downloadStream) {
+      return res.status(404).json({
+        success: false,
+        message: "Photo not found"
+      });
+    }
+
+    res.set('Content-Type', 'image/jpeg');
+    downloadStream.pipe(res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 // Helper function to validate references
 const validateReferences = async (branchId, registeredById) => {
   const [branch, employee] = await Promise.all([

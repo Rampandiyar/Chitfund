@@ -2,7 +2,106 @@ import Employee from "../models/employee.js";
 import Branch from "../models/branch.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { uploadImage, getImage, deleteImage } from '../Utils/gridFS.js';
+import multer from 'multer';
 
+
+
+
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
+// @desc    Upload employee photo
+// @route   PUT /api/employees/:id/photo
+export const uploadEmployeePhoto = [
+  upload.single('photo'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Please upload an image file"
+        });
+      }
+
+      // Get the employee first to check for existing photo
+      const employee = await Employee.findById(req.params.id);
+      if (!employee) {
+        return res.status(404).json({
+          success: false,
+          message: "Employee not found"
+        });
+      }
+
+      // Delete old photo if exists
+      if (employee.photo) {
+        await deleteImage(employee.photo);
+      }
+
+      // Upload new photo
+      const filename = await uploadImage(req.file);
+
+      // Update employee with new photo filename
+      employee.photo = filename;
+      await employee.save();
+
+      res.status(200).json({
+        success: true,
+        data: {
+          photo: filename
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+];
+
+// @desc    Get employee photo
+// @route   GET /api/employees/:id/photo
+export const getEmployeePhoto = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.params.id);
+    
+    if (!employee || !employee.photo) {
+      return res.status(404).json({
+        success: false,
+        message: "Photo not found"
+      });
+    }
+
+    const downloadStream = await getImage(employee.photo);
+    
+    if (!downloadStream) {
+      return res.status(404).json({
+        success: false,
+        message: "Photo not found"
+      });
+    }
+
+    res.set('Content-Type', 'image/jpeg');
+    downloadStream.pipe(res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 // Helper function to generate token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -74,9 +173,9 @@ export const registerEmployee = async (req, res) => {
 // @route   POST /api/employees/login
 export const authEmployee = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { emp_id,   password } = req.body;
 
-    const employee = await Employee.findOne({ email })
+    const employee = await Employee.findOne({ emp_id })
       .populate('branch_id', 'branch_id bname');
     
     if (!employee || !(await employee.comparePassword(password))) {

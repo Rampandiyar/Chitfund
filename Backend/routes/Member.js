@@ -6,7 +6,9 @@ import {
   updateMember,
   toggleMemberStatus,
   getMemberStats,
-  deleteMember
+  deleteMember,
+  uploadMemberPhoto,
+  getMemberPhoto
 } from "../controller/member.controller.js";
 import { protect, manager } from "../middleware/authMiddleware.js";
 
@@ -22,5 +24,6 @@ router.get("/stats", protect, getMemberStats);
 router.get("/:id", protect, getMemberById);
 router.put("/:id", protect, manager, updateMember);
 router.patch("/:id/status", protect, manager, toggleMemberStatus);
-
+router.put('/:id/photo', uploadMemberPhoto);
+router.get('/:id/photo', getMemberPhoto);
 export default router;

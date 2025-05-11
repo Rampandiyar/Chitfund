@@ -10,7 +10,9 @@ import {
   getEmployeesByBranch,
   updateEmployeeRole,
   getEmployeeProfile,
-  updateEmployeeProfile
+  updateEmployeeProfile,
+  uploadEmployeePhoto,
+  getEmployeePhoto
 } from "../controller/employee.controller.js";
 import { protect, admin, manager, employee, sameBranchOrAdmin } from "../middleware/authMiddleware.js";
 
@@ -43,4 +45,6 @@ router.route("/:id")
   .get(protect, employee, getEmployeeById)
   .put(protect, employee, updateEmployee);  // Employees can update their own profile
 
+  router.put('/:id/photo', uploadEmployeePhoto);
+  router.get('/:id/photo', getEmployeePhoto);
 export default router;

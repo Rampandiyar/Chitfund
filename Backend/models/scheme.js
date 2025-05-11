@@ -7,31 +7,31 @@ const SchemeSchema = new mongoose.Schema({
     },
     scheme_name: {
         type: String,
-        required: true,
+  
     },
     chit_amount: {
         type: Number,
-        required: true,
+
     },
     duration_months: {
         type: Number,
-        required: true,
+    
     },
     installment_amount: {
         type: Number,
-        required: true,
+       
     },
     commission_rate: {
         type: Number,
-        required: true,
+       
     },
     min_members: {
         type: Number,
-        required: true,
+      
     },
     max_members: {
         type: Number,
-        required: true,
+       
     },
     auction_frequency: {
         type: String,
